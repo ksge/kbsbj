@@ -6,13 +6,15 @@
 'v3.1 bugfixes + tested on Ubuntu 18.04.3
 'v3.2 bugfixes + tested on win10 1903
 'v3.3 bugfixes
+'v3.4 fixed high cpu usage + ability to choose winning rows by hitting number in welcome screen
 ' A STRIP BLAKCJACK GAME BUILD WITH FREEBASIC AND BASED ON KSGE (KISS STRIP GAME ENGINE) 
-' COMPILE WITH FREEBASIC COMPILER (FBC) TESTET WITH VERSION 1.0.7 ON LINUX (UBUNTU 18.04) and WINDOWS 10
+' COMPILE WITH FREEBASIC COMPILER (FBC) TESTET WITH VERSION 1.7.1 ON LINUX (DEBIAN 10 + UBUNTU 18.04) OR WINDOWS 10
+' compile with -s gui switch reccomended
 ' on linux, following packages are needed to compile, please install them:
 ' sudo apt install -y gcc libncurses-dev libgpm-dev libx11-dev libxext-dev libxpm-dev libxrandr-dev libxrender-dev libgl1-mesa-dev libffi-dev libtinfo5
 ' AFTER COMPILED RUN THE BINARY WITH THE CORRECT PARAMETERS: KSBJ row number    game name    model name/folder   debug(0=no 1=yes)
 ' example; ksbj 2 "KISS BLACKJACK" "marylin" 0 
-print "KSBJ version 3.3 20190922"
+print "KSBJ version 3.4 20200219"
 
 
 '-------------------------------------------------
@@ -451,10 +453,24 @@ print "you can also use keyboard:"
 PRINT "P=play H=hit S=stay"
 print "LEFT MOUSE BUTTON OR HIT P TO START"
 do
+	sleep 99 '3.4
 	key=inkey
 	GetMouse CurrentX, CurrentY, , MouseButtons
-loop until key = "P" or key = "p" or MouseButtons = LEFTBUTTON
-sleep 99,1
+loop until key = "P" or key = "p" or key = "1" or key= "2" or key= "3" or key = "4" or key = "5" or MouseButtons = LEFTBUTTON
+'sleep 99,1 '3.4
+
+select case key
+	case "1"
+	nrow = 1
+	case "2"
+	nrow = 2
+	case "3"
+	nrow = 3
+	case "4"
+	nrow = 4
+	case "5"
+	nrow = 5
+end select
 
 
 Do 
@@ -700,6 +716,7 @@ Do
 	
 	If state = GameState.PlayerTurn OrElse state = GameState.GameOver Then
 		key = ""
+		sleep 99 '3.4
 		key = InKey
 		GetMouse CurrentX, CurrentY, , MouseButtons
 		
