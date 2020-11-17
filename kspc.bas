@@ -1,3 +1,5 @@
+' STILL TO BE REWRITTEN
+
 ' KSPC - K.I.S.S. BITCOIN PAYMENT CHECKER VERSION 1.4 20190922
 ' bitcoin payment checker for KISS STRIP GAME ENGINE (KSGE) based on price and address semi-randomization
 ' it will ask to send a semi-random-range amount of bitcoin to an address selected randomly form a given group of addresses
