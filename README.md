@@ -1,15 +1,17 @@
-# kbsbj
-Kissbit Strip Blackjack
+# KISS Strip Poker
 
-
-
-a free/opensource strip game based on KSGE wich features:
+a free/opensource strip poker game based on KISS strip game engine/KISS Strip Blackjack wich features:
 
     encrypted media content
-    demo mode until a game-key is provided
-    ability to create a game-key using an in-game bitcoin payment checker
-    YOU can personalize and create your own strip game and also monetize. no third parties involved.
+    demo mode until a key is provided (to do)
+    integration with paymant gateways of any kind (to do)
+    YOU can personalize and create your own strip poker game and also monetize.
     
-    full working demostration both for windows 10, ubuntu 18.04 and Debian 10 is there:
-    https://kissstripblackjack.wordpress.com/
+    some components ar done with freeasic, other with python, other are 3rd party opensource projects like vlc, ccrypt and more.
+    
+    to do: rewrite all the components in python.
+    
+    full working demostration still in progress...
+    
+    
 
