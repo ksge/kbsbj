@@ -15,10 +15,10 @@ dim shared shashw as string
 '********************************************************
 'static parameters previously passed via command line
 const C1 as string = "DEMO" 'model name wich should be equal to folder name
-K1 = "6dhj3MFHQO348djfyg3KDFJ3ufjKFofwLgkj48jfLFL2euue" 'key used for encrypt media content and activation file
-Kh = "jfheEEJDI£I3774646dKDKkfkfkfKFkfkeueufj3L£d39999" ' key used for temporary activation file (helpme)
-shash = "bdeba239a6b92b6668ce63dbf8bc23e6  -" 'single hash for all clip *.cpt files
-shashw = "BF85E9D2C105FE3976C89898568CAF47  -" 'single hash for all clip *.cpt files for wiindows platform
+K1 = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXX" 'key used for encrypt media content and activation file
+Kh = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXX" ' key used for temporary activation file (helpme)
+shash = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXX  -" 'single hash for all clip *.cpt files
+shashw = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXX  -" 'single hash for all clip *.cpt files for wiindows platform
 usdprice = 3 'target price in USD (intended more or less because of volatility and randomization), please insert integer number example: 5
 randomizeprice = 0.00009999 'randomize price in satoshi
 raddress(1) = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" 'address to check transaction for (where monetize)
@@ -28,7 +28,7 @@ const C3 as string = "mkv" 'clip file format
 'print K1 'debug
 'sleep 'debug
 const C2 as string = "0" 'debug 0=no 1=yes
-const C4 as string = "RED ROSE STRIP POKER" 'game name
+const C4 as string = "KISS STRIP POKER" 'game name
 dim C5 as string = Command(1)  'number of winning rows to strip opponent if no specified in command line
 const C5bis as string = "2" 'numbero of standard rows (in case Commnand(1) = 0
 const C6 as integer = 5 'number of stages allowed for demo
