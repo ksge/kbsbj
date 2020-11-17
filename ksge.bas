@@ -1,7 +1,7 @@
-' KSGE K.I.S.S. STRIP GAME ENGINE VERSION 5.5 20190922
+' KSGE K.I.S.S. STRIP GAME ENGINE VERSION 5.9 20201001
 ' A STRIP GAME ENGINE BUILD WITH FREEBASIC AND BASED ON LIBVLC AND CCRYPT 
 ' THIS VERSION CAN PLAY ONLY ENCRYPTED VIDEOCLIPS AND CHECKS FOR THE RIGHT ACTIVATION KEY
-' COMPILE WITH FREEBASIC COMPILER (FBC) TESTET WITH VERSION 1.0.7 ON LINUX (UBUNTU 18.04) AND WINDOWS 10
+' COMPILE WITH FREEBASIC COMPILER (FBC) TESTET WITH VERSION 1.0.7 ON LINUX (DEBIAN 10 and UBUNTU 18.04) AND WINDOWS 10
 ' ON UBUNTU gcc , libvlc-dev , libncurses5 , libncurses5-dev are needed
 ' sudo apt install -y gcc libncurses-dev libgpm-dev libx11-dev libxext-dev libxpm-dev libxrandr-dev libxrender-dev libgl1-mesa-dev libffi-dev libtinfo5
 ' VIDEOCLIPS SHOULD BE ENCRYPTED WITH CCRYPT HERE IS AN EXAMPLE: ./ccrypt -e -K Str1pgame$areWonferful! YOURFOLDER/*.mkv
@@ -22,48 +22,63 @@
 ' VERSION 5.3 20190827 various bugfixes + testend on Ubuntu 18.04.3
 ' VERSION 5.4 20190828 various bugfixes + tested on Windows 10 1903
 ' VERSION 5.5 20190922 bugfixes for key file reading
+' VERSION 5.6 20191027 added checksum on clips, bugfix for abnormal quit on end
+' VERSION 5.7 20200220 changed colors/messages in console window
+' VERSION 5.8 20200918 fixed key read bug
+' VERSION 5.9 20201001 fixed md5 *.cpt checksum bug on linux
+' VERSION 6.0 20201017 support for PokerView.py added popup when opponent lost
 
 
 dim totaladdr as integer
 dim shared K1 as string*64
+dim shared HW1 as string*64
+dim shared lin as string*64
 dim Kh as string*64
 dim raddress(1 to 20) as string
 dim usdprice as integer
 dim randomizeprice as double
 dim shared action as string
+dim shared shash as string
+dim shared shashw as string
 
 
 '********************************************************
 'static parameters previously passed via command line
-const C1 as string = "JENNIFER" 'model name wich should be equal to folder name
-K1 = "XXXXXX" 'key used for encrypt media content and activation file
-Kh = "YYYYYY" ' key used for temporary activation file (helpme)
-usdprice = 1 'target price in USD (intended more or less because of volatility and randomization), please insert integer number example: 5
+const C1 as string = "DEMO" 'model name wich should be equal to folder name
+K1 = "6dhj3MFHQO348djfyg3KDFJ3ufjKFofwLgkj48jfLFL2euue" 'key used for encrypt media content and activation file
+Kh = "jfheEEJDI£I3774646dKDKkfkfkfKFkfkeueufj3L£d39999" ' key used for temporary activation file (helpme)
+shash = "bdeba239a6b92b6668ce63dbf8bc23e6  -" 'single hash for all clip *.cpt files
+shashw = "BF85E9D2C105FE3976C89898568CAF47  -" 'single hash for all clip *.cpt files for wiindows platform
+usdprice = 3 'target price in USD (intended more or less because of volatility and randomization), please insert integer number example: 5
 randomizeprice = 0.00009999 'randomize price in satoshi
-raddress(1) = "bc1qarxefv6l3m7gmdaa03pgf4equr28y5flw9hgsp" 'address to check transaction for (where monetize)
-raddress(2) = "bc1qndl39dxwfyje6te7fludy2vd8nsmmpjd56gdlr" 'address to check transaction for (where monetize)
-raddress(3) = "bc1qwm5arqzdkgx6rvncdtdhrmg3sydupy5p3y98f5" 'address to check transaction for (where monetize)
-raddress(4) = "bc1qn4w0lenk270jj36g8hn7t99d467rtqpqesqrn8" 'address to check transaction for (where monetize)
-totaladdr = 4
+raddress(1) = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" 'address to check transaction for (where monetize)
+totaladdr = 1
 const C3 as string = "mkv" 'clip file format
 'print "K1:" 'debug
 'print K1 'debug
 'sleep 'debug
 const C2 as string = "0" 'debug 0=no 1=yes
-const C4 as string = "KISSBIT STRIP BLACKJACK" 'game name
+const C4 as string = "RED ROSE STRIP POKER" 'game name
 dim C5 as string = Command(1)  'number of winning rows to strip opponent if no specified in command line
 const C5bis as string = "2" 'numbero of standard rows (in case Commnand(1) = 0
-const C6 as integer = 8 'number of stages allowed for demo
+const C6 as integer = 5 'number of stages allowed for demo
 
 '********************************************************
 
+dim shared endflg as string
+endflg = "no"
+
 ' let's see if we are on linux or windows
+dim shared CC1 as string
 #IFDEF __FB_WIN32__
    CONST OS = "windows"
+   CC1 = "..\" + C1
 #ELSE
    CONST OS = "linux"
+   CC1 = "../" + C1
 #ENDIF
-print "KSGE VERSION 5.5 FOR: " ; OS
+
+print "KSGE VERSION 5.9 FOR: " ; OS
 sleep 1000
 
 'dim shared tmpplayrootfolder as string
@@ -100,11 +115,14 @@ End sub
 
 sub chkbin 'chk if the bin(s) are genuine
 	dim cmdshl as string
+	dim cmdshl2 as string
 	
 	#IFDEF __FB_WIN32__
 		cmdshl = ("md5\md5.exe " + decryptexename)
+		cmdshl2 = ("dir *.cpt /b /os | md5\md5.exe")
 	#ELSE
 		cmdshl = ("md5sum " + decryptexename)
+		cmdshl2 = ("du --apparent-size -k *.cpt | md5sum")
 	#ENDIF
 	
 	Open Pipe cmdshl For Input As #1
@@ -122,6 +140,21 @@ sub chkbin 'chk if the bin(s) are genuine
 		end if
 	Loop
 	Close #1
+	
+	Open Pipe cmdshl2 For Input As #1
+	'Do Until EOF(1)
+		Line Input #1, ln
+		Close #1
+		if ln <> shash and ln <> shashw then
+			action = "qui"
+			print ln
+			print "ERROR: WRONG CLIPS CHECKSUM!"
+			sleep 3000,1
+			'Close #1
+			end
+		end if
+	'Loop
+	
 	
 	#IFDEF __FB_WIN32__
 		cmdshl = ("md5\md5.exe libvlc.dll")
@@ -147,17 +180,18 @@ end sub
 dim shared EML as string
 sub chkhw
 	'check if hw is ok
-	dim HW1 as string 
 	dim cmd2 as string
 	chkbin
-	'open pipe ("echo " + K1 + " | " + decryptexename + " -c -k - " + C1 + "-key") for Input as #3
-	open pipe ("echo " + K1 + "| " + decryptexename + " -c -k - " + C1 + "-key") for Input as #3	
+	'open pipe ("echo " + K1 + " | " + decryptexename + " -c -k - " + CC1 + "-key") for Input as #3
+	open pipe ("echo " + K1 + "| " + decryptexename + " -c -k - " + CC1 + "-key") for Input as #3	
 		line input #3, EML
 		line input #3, HW1
-		'print HW1
-		'print EML
+		'print "HW1: " 'debug
+		'print HW1 'debug
+		'print "K1: " 'debug
+		'print K1 'debug
 	close #3
-	Dim As String lin
+	'Dim As String lin
 	
 	#IFDEF __FB_WIN32__
 		Open Pipe "getmac /fo csv /nh" For Input As #2
@@ -167,10 +201,13 @@ sub chkhw
 	
 	'Do Until EOF(2)
 		Line Input #2, lin
+		Close #2
 		'print "lin:" 'debug
 		'print lin 'debug
 		if lin = HW1 or HW1 = K1 then
-			Close #2
+			'Close #2
+			print
+			print
 			print "Thank YOU for supporting this game: "
 			print EML
 			shell "echo " + EML + " thank YOU for supporting this game!"
@@ -179,11 +216,13 @@ sub chkhw
 			else 
 				print "your game key has no limits"
 			end if
+			print
+			print
 			sleep 500,1
 			goto rungame:
 		end if
 	'Loop
-	Close #2
+	'Close #2
 	print "this game is a demo; "
 	print "if you like and want to finish undress the opponent, "
 	print "please support it... thank you"
@@ -216,20 +255,18 @@ if C5 < "1" then C5 = C5bis
 'print "./ksbj " + C5 + " " + """" + C4 + """" + " " + """" + C1 + """" + " " + C2 + " &" 'debug
 
 #IFDEF __FB_WIN32__
-	shell "start ksbj.exe " + C5 + " " + """" + C4 + """" + " " + """" + C1 + """" + " " + C2
+	'shell "start ksbj.exe " + C5 + " " + """" + C4 + """" + " " + """" + C1 + """" + " " + C2
+	shell "start PokerView.exe"
 #ELSE
-	shell "./ksbj " + C5 + " " + """" + C4 + """" + " " + """" + C1 + """" + " " + C2 + " &"
+	'shell "./ksbj " + C5 + " " + """" + C4 + """" + " " + """" + C1 + """" + " " + C2 + " &"
+	shell "./PokerView &"
 #ENDIF
 
-
-print "KSGE version 5.3 20190828 THIS VERSION WORKS ONLY WITH ENCRYPTED MEDIA CONTENT"
-print "LIST OF PARAMETERS:"
-print "folder (=model name): " + C1
-print "debug flag (0=no 1=yes): " + C2
-print "clip file extension: " + C3
-'print "zoom (1=1x 2=2x f=fullscreen): " + Command(4)
-'print "Activation key: " + Command(5) 
-
+color 15,1
+'cls
+print "KISSBIT STRIP GAME ENGINE"
+'print "this is free/opensource software"
+'print "model name: " + C1
 
 #include once "vlc/vlc.bi"
 
@@ -297,8 +334,8 @@ Function clipcounter (cliptosearch as string) as string
 		'if C2 = "1" then Print filename 'debug
 		filename = Dir( )
 	Loop
-'if C2 = "1" then print "clipsearched: " , cliptosearch 'debug
-'if C2 = "1" then print "counter: " , clipcount 'debug
+print "clipsearched: " , cliptosearch 'debug
+print "counter: " , clipcount 'debug
 Function = str (clipcount)
 'Sleep
 End Function
@@ -316,6 +353,7 @@ sub stagescounter
 	if C2 = "1" then print flname 'debug
 	if C2 = "1" then print "TOTAL STAGES: " , totalstages 'debug
 	if C2 = "1" then print totalstages 'debug
+	'sleep 'debug
 end sub
 
 
@@ -398,8 +436,17 @@ stagescounter
 
 
 while action <> "qui"
+print "KISSBIT STRIP GAME ENGINE - version 5.9 20201001"
+print "this is free/opensource software, source code avaible on:"
+print "https://github.com/ksge"
+print
+print "model name: " + C1
+print
 
 if currentstage > 0 then
+	if endflg = "yes" then
+		action = "end"
+	end if
 	select case action
 	case "car"
 		clipcounter (nclipstage + str (currentstage) + action)
@@ -424,6 +471,14 @@ if currentstage > 0 then
 		clipcounter (nclipend)
 		cliptoplay = nclipend + str(Int(rnd_range(1, clipcount+1))) + ncliptype 
 		actiondone ("end") 'after off everything... go to end scenes...
+		endflg = "yes"
+		'*************6.0
+		#IFDEF __FB_WIN32__
+		shell "start poker-end.exe"
+		#ELSE
+		shell "./poker-end &"
+		#ENDIF
+		'*************
 		elseif currentstage < totalstages then
 			actiondone ("car") 'after off... model should take cards...
 		end if
@@ -475,7 +530,7 @@ if currentstage = 0 then
 	action = "car"
 end if
 	
-   if C2 = "1" then print mediaFileName 'debug
+   print mediaFileName 'debug
    ' check decrypter checksum
    'chkbin
    ' decrypt content
